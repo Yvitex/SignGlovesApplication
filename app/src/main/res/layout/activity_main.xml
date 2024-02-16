@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <TextView
+        android:id="@+id/debuggingText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/debuggingTextCalib1"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.532"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.757" />
+
+    <Button
+        android:id="@+id/startPatternMode"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="#000000"
+        android:backgroundTint="@color/black"
+        android:foregroundTint="#FFFFFF"
+        android:paddingLeft="32dp"
+        android:paddingRight="32dp"
+        android:text="@string/start"
+        android:textColor="#FFFFFF"
+        android:textColorHighlight="#F3DFDF"
+        android:textColorHint="#E6D4D4"
+        android:textColorLink="#F3EEEE"
+        app:layout_constraintBottom_toTopOf="@+id/debuggingText"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.289" />
+
+    <Button
+        android:id="@+id/learningMode"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/my_button_bg"
+        android:backgroundTint="@color/white"
+        android:foregroundTint="#FFFFFF"
+        android:paddingLeft="32dp"
+        android:paddingRight="32dp"
+        android:shadowColor="#2196F3"
+        android:text="@string/learning_mode"
+        android:textColor="#000000"
+        android:textColorHighlight="#F3DFDF"
+        app:layout_constraintBottom_toTopOf="@+id/debuggingText"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/startPatternMode"
+        app:layout_constraintVertical_bias="0.116"
+        app:strokeWidth="8dp" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

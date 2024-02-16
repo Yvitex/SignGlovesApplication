@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">SignGlovesApplication</string>
+    <string name="debuggingTextCalib1">Calibrating... Please, don\'t move</string>
+    <string name="start">Start</string>
+    <string name="learning_mode">Learning Mode</string>
+    <string name="input_word">Input Word</string>
+    <string name="speak">Speak</string>
+</resources>
