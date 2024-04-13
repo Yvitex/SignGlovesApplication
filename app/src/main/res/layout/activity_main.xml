@@ -4,19 +4,50 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:scrollbarSize="4dp"
     tools:context=".MainActivity">
 
-    <TextView
-        android:id="@+id/debuggingText"
+    <Button
+        android:id="@+id/learningMode"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/debuggingTextCalib1"
+        android:background="@drawable/my_button_bg"
+        android:backgroundTint="@color/white"
+        android:foregroundTint="#FFFFFF"
+        android:paddingLeft="32dp"
+        android:paddingRight="32dp"
+        android:shadowColor="#2196F3"
+        android:text="@string/custom_model"
+        android:textColor="#FFFFFF"
+        android:textColorHighlight="#F3DFDF"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.532"
+        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.757" />
+        app:layout_constraintVertical_bias="0.5"
+        app:strokeWidth="8dp" />
+
+    <Button
+        android:id="@+id/qrCodeButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/my_button_bg"
+        android:backgroundTint="@color/white"
+        android:foregroundTint="#FFFFFF"
+        android:paddingLeft="32dp"
+        android:paddingRight="32dp"
+        android:shadowColor="#2196F3"
+        android:text="Scan QR Code"
+        android:textColor="#FFFFFF"
+        android:textColorHighlight="#F3DFDF"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/learningMode"
+        app:layout_constraintVertical_bias="0.194"
+        app:strokeWidth="8dp" />
 
     <Button
         android:id="@+id/startPatternMode"
@@ -32,32 +63,32 @@
         android:textColorHighlight="#F3DFDF"
         android:textColorHint="#E6D4D4"
         android:textColorLink="#F3EEEE"
-        app:layout_constraintBottom_toTopOf="@+id/debuggingText"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintHorizontal_bias="0.493"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.289" />
+        app:layout_constraintVertical_bias="0.354" />
 
-    <Button
-        android:id="@+id/learningMode"
+    <Switch
+        android:id="@+id/bluetoothSwitch"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="@drawable/my_button_bg"
-        android:backgroundTint="@color/white"
-        android:foregroundTint="#FFFFFF"
-        android:paddingLeft="32dp"
-        android:paddingRight="32dp"
-        android:shadowColor="#2196F3"
-        android:text="@string/learning_mode"
-        android:textColor="#000000"
-        android:textColorHighlight="#F3DFDF"
-        app:layout_constraintBottom_toTopOf="@+id/debuggingText"
+        android:switchMinWidth="50dp"
+        android:text="Enable Bluetooth"
+        android:textSize="17dp"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintHorizontal_bias="0.848"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/startPatternMode"
-        app:layout_constraintVertical_bias="0.116"
-        app:strokeWidth="8dp" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.119" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_begin="20dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

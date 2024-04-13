@@ -6,43 +6,73 @@
     android:layout_height="match_parent"
     tools:context=".StartMode">
 
-    <EditText
-        android:id="@+id/processedWord"
+    <Button
+        android:id="@+id/debugSwitch"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:ems="10"
-        android:hint="@string/input_word"
-        android:importantForAutofill="no"
-        android:inputType="text"
-        android:minHeight="48dp"
+        android:layout_marginTop="48dp"
+        android:text="DebugSwitch"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.497"
+        app:layout_constraintHorizontal_bias="0.501"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.368"
-        tools:ignore="LabelFor" />
+        app:layout_constraintVertical_bias="0.612" />
 
     <Button
-        android:id="@+id/speakButton"
+        android:id="@+id/lightsButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/speak"
+        android:layout_marginTop="20dp"
+        android:text="Debug Lights"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/processedWord"
-        app:layout_constraintVertical_bias="0.111" />
+        app:layout_constraintTop_toBottomOf="@+id/debugSwitch"
+        app:layout_constraintVertical_bias="0.093" />
 
     <TextView
-        android:id="@+id/dataStreamText"
+        android:id="@+id/processedWord"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="160dp"
+        android:text="Text Will Appear Here"
+        android:textAlignment="center"
+        android:textSize="40dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/percentageShow"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="placeholder"
+        android:textSize="20dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintHorizontal_bias="0.501"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/speakButton"
-        app:layout_constraintVertical_bias="0.17" />
+        app:layout_constraintTop_toBottomOf="@+id/processedWord"
+        app:layout_constraintVertical_bias="0.089" />
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="30dp"
+        android:layout_marginEnd="30dp"
+        android:layout_marginBottom="32dp"
+        android:backgroundTint="#31CD1F"
+        android:maxHeight="32dip"
+        android:progressBackgroundTint="#ED0202"
+        android:progressTint="#0FEA18"
+        app:layout_constraintBottom_toTopOf="@+id/processedWord"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.955" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
