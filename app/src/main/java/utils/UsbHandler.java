@@ -11,6 +11,7 @@ import android.hardware.usb.UsbManager;
 import android.os.Build;
 import android.os.Handler;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.annotation.RequiresApi;
 
@@ -53,15 +54,28 @@ public class UsbHandler {
         }
     }
 
+    public boolean getConnection() {
+        return this.connection != null;
+    }
+
     @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
-    public void requestPermission() {
+    public boolean requestPermission() {
         PendingIntent permissionIntent = PendingIntent.getBroadcast(this.context, 0,
                 new Intent(ACTION_USB_PERMISSION), PendingIntent.FLAG_IMMUTABLE);
-        if (this.connection == null) {
-            IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
-            this.context.registerReceiver(usbReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
-            this.usbManager.requestPermission(this.device, permissionIntent);
+        try {
+            if (this.connection == null) {
+                IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
+                this.context.registerReceiver(usbReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
+                this.usbManager.requestPermission(this.device, permissionIntent);
+                return false;
+            } else {
+                return true;
+            }
+        } catch (NullPointerException e) {
+            Toast.makeText(this.context, "Make sure that USB is connected", Toast.LENGTH_LONG).show();
+            return false;
         }
+
     }
 
     public UsbSerialPort getPort() {

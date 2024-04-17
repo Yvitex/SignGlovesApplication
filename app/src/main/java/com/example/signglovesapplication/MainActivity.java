@@ -16,7 +16,12 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
+import android.view.View;
+import android.widget.Adapter;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.Toast;
 
@@ -35,36 +40,34 @@ import utils.QrCodeHandler;
 import utils.ServerDownloader;
 import utils.StorageHandler;
 import utils.TensorFlowHandler;
+import utils.UsbHandler;
 
 @SuppressLint({"MissingPermission", "NewApi"})
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
     private Button startButton;
     private Button learnButton;
-//    private TextView debuggingText;
     @SuppressLint("UseSwitchCompatOrMaterialCode")
     private Switch bluetoothSwitch;
     private int REQUEST_ENABLE_BT = 0;
-    private final String debugString = "Bluetooth";
-    private BluetoothAdapter bluetoothAdapter;
-
     private BluetoothHandler btHandler;
     private Button qrCodeButton;
-    private Intent intent;
     private String path;
-    private TensorFlowHandler tensorman;
-    private Array2DHandler handler;
     private StorageHandler storageHandler;
+    private String language = "English";
 
     private ActivityResultLauncher<Intent> activityResultLauncher;
     private ActivityResultLauncher<ScanOptions> barLauncher;
     private QrCodeHandler qrCodeHandler;
     private String mainDirectory = "GlovesApp";
+    private Spinner dropDown;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+
 
         activityResultLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), new ActivityResultCallback<ActivityResult>() {
             @Override
@@ -80,9 +83,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
-
-
-
 
         barLauncher = registerForActivityResult(new ScanContract(), result-> {
             String model = "model.tflite";
@@ -111,55 +111,50 @@ public class MainActivity extends AppCompatActivity {
 
         startButton = findViewById(R.id.startPatternMode);
         learnButton = findViewById(R.id.learningMode);
-        bluetoothSwitch = findViewById(R.id.bluetoothSwitch);
         qrCodeButton = findViewById(R.id.qrCodeButton);
-        handler = new Array2DHandler();
+        dropDown = findViewById(R.id.languageSelection);
 
         qrCodeHandler = new QrCodeHandler();
         btHandler = BluetoothHandler.getInstance(this);
         storageHandler = new StorageHandler(this, MainActivity.this, activityResultLauncher);
         storageHandler.createDirectory(mainDirectory);
 
+        String[] languages = dropDown.getResources().getStringArray(R.array.languages);
+        ArrayAdapter adapter = new ArrayAdapter(this, android.R.layout.simple_spinner_item,
+                languages);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        dropDown.setAdapter(adapter);
+        dropDown.setOnItemSelectedListener(this);
+
+
         startButton.setOnClickListener(view -> {
-            Intent intent = new Intent(this, StartMode.class);
-            intent.putExtra("isCustom", false);
-            startActivity(intent);
-//            if (btHandler.isConnected()) {
-//                Intent intent = new Intent(this, StartMode.class);
-//                intent.putExtra("isCustom", false);
-//                startActivity(intent);
-//            } else {
-//                Toast.makeText(this, "Not Connected to Gloves", Toast.LENGTH_LONG).show();
-//            }
+            UsbHandler usbHandler = new UsbHandler(this);
+            boolean state = usbHandler.requestPermission();
+                Intent intent = new Intent(this, StartMode.class);
+                intent.putExtra("isCustom", false);
+                intent.putExtra("locale", this.language);
+                startActivity(intent);
+
         });
-        
-//        try {
-//            bluetoothSwitch.setChecked(btHandler.getIsEnabled());
-//        } catch (NullPointerException e) {
-//            Toast.makeText(this, "Encountered Error: BT Non Supported " + e.getMessage(), Toast.LENGTH_LONG).show();
-//        }
-//
-//        bluetoothSwitch.setOnCheckedChangeListener((compoundButton, b) -> {
-//            if (bluetoothSwitch.isChecked()) {
-//                btHandler.enableBluetooth();
-//            } else {
-//                btHandler.disableBluetooth();
-//            }
-//        });
 
         learnButton.setOnClickListener(view -> {
-            Intent intent = new Intent(this, StartMode.class);
-            intent.putExtra("isCustom", true);
-            startActivity(intent);
+            UsbHandler usbHandler = new UsbHandler(this);
+            boolean state = usbHandler.requestPermission();
+            if (storageHandler.hasThisDirectory(mainDirectory + "/model.tflite")) {
+                Intent intent = new Intent(this, StartMode.class);
+                intent.putExtra("isCustom", true);
+                intent.putExtra("locale", "English");
+                startActivity(intent);
+            } else {
+                Toast.makeText(this, "Can't find directory, make sure you " +
+                        "downloaded the model", Toast.LENGTH_LONG).show();
+            }
+
         });
 
         qrCodeButton.setOnClickListener(view -> {
             qrCodeHandler.scanOptions(this.barLauncher);
         });
-
-        WordProcessor wordProcessor = new WordProcessor(this, Locale.ITALIAN);
-        JSONObject wordes = wordProcessor.getCustomWords();
-        Log.d("External Model", "onCreate: " + wordes.toString());
 
     }
 
@@ -185,4 +180,19 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+        Log.d("Languagexx", "onItemSelected: " + adapterView.getId());
+        Log.d("Languagexx", "onItemSelected: On Field");
+        if (adapterView.getId() == R.id.languageSelection) {
+            Log.d("Languagexx", "onItemSelected: Click");
+            this.language = adapterView.getItemAtPosition(i).toString();
+            Log.d("Languagexx", "onItemSelected: " + this.language);
+        }
+    }
+
+    @Override
+    public void onNothingSelected(AdapterView<?> adapterView) {
+
+    }
 }

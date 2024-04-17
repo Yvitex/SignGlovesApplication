@@ -108,4 +108,9 @@ public class StorageHandler {
             }
         }
     }
+
+    public boolean hasThisDirectory(String directoryPath) {
+        File directory = new File(Environment.getExternalStorageDirectory(), directoryPath);
+        return directory.exists();
+    }
 }

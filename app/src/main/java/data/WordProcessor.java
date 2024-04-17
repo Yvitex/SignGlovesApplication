@@ -186,4 +186,9 @@ public class WordProcessor {
         }
 
     }
+
+    public void onDestroy(){
+        textToSpeech.stop();
+        textToSpeech.shutdown();
+    }
 }

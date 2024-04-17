@@ -3,6 +3,7 @@ package com.example.signglovesapplication;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.annotation.SuppressLint;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -39,23 +40,23 @@ import utils.UsbHandler;
 
 public class StartMode extends AppCompatActivity {
 
-    private TextToSpeech textToSpeech;
-    private Button speakButton;
     private Button debugButton;
     private Button lights;
     private TextView percentage;
     private TextView dataInput;
-    private BluetoothHandler btHandler;
-    private DataProcessor dataProcessor;
     private WordProcessor wordProcessor;
     private ProgressBar progressBar;
+    private UsbSerialPort port;
     int counter = 0;
+    private boolean willWork = true;
 
     private boolean isCustom = false;
+    private Locale selectedLocale = Locale.ENGLISH;
     private String TAG = "StartMode";
     private UsbHandler usbHandler;
 
 
+    @SuppressLint("SetTextI18n")
     @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,13 +66,36 @@ public class StartMode extends AppCompatActivity {
         Bundle data = getIntent().getExtras();
         if (data != null) {
             this.isCustom = data.getBoolean("isCustom");
+            String getLocale = data.getString("locale");
+            if (getLocale != null) {
+                switch (getLocale) {
+                    case "Japanese":
+                        this.selectedLocale = Locale.JAPANESE;
+                        break;
+                    case "Tagalog":
+                        this.selectedLocale = new Locale("filipino");
+                        break;
+                    case "Bisaya":
+                        this.selectedLocale = new Locale("visaya");
+                        break;
+                    case "Italian":
+                        this.selectedLocale = Locale.ITALIAN;
+                        break;
+                    case "Chinese":
+                        this.selectedLocale = Locale.CHINESE;
+                        break;
+                    default:
+                        this.selectedLocale = Locale.ENGLISH;
+                }
+            }
+
         }
 
         // Temporary Main Container of Data
         List<float[]> collector = new ArrayList<>();
 
         // Instantiating Word Processor
-        wordProcessor = new WordProcessor(this, Locale.JAPANESE);
+        wordProcessor = new WordProcessor(this, this.selectedLocale);
 
         // something else
         dataInput = findViewById(R.id.processedWord);
@@ -83,169 +107,122 @@ public class StartMode extends AppCompatActivity {
         // Press o in arduino
         lights = findViewById(R.id.lightsButton);
 
-        usbHandler = new UsbHandler(this);
-        usbHandler.requestPermission();
-
-//        if (usbHandler.getApprovedPermission()) {
+        try {
+            usbHandler = new UsbHandler(this);
+            usbHandler.requestPermission();
             Log.d(TAG, "onCreate: Approved Permission");
-            UsbSerialPort port = usbHandler.getPort();
+            port = usbHandler.getPort();
             Log.d(TAG, "onCreate: got port" + port.toString());
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                byte[] buffer = new byte[1024]; // Buffer size as needed
-                StringBuilder messageBuilder = new StringBuilder(); // To accumulate characters until a delimiter is encountered
+        } catch (NullPointerException e) {
+            Toast.makeText(this, "No USB Connected", Toast.LENGTH_LONG).show();
+            this.willWork = false;
+        } catch (IllegalArgumentException f) {
+            usbHandler.closePort();
+            usbHandler = new UsbHandler(this);
+            usbHandler.requestPermission();
+            Log.d(TAG, "onCreate: Approved Permission");
+            port = usbHandler.getPort();
+            Log.d(TAG, "onCreate: got port" + port.toString());
+        }
 
-                try {
-                    // Continuously read data
-                    while (true) {
-                        int len = port.read(buffer, 1000);
-                        if (len > 0) {
-                            String data = new String(buffer, 0, len);
-                            // Append the read data to the StringBuilder
-                            messageBuilder.append(data);
-                            // Process complete messages
-                            while (true) {
-                                int delimiterIndex = messageBuilder.indexOf("\n");
-                                if (delimiterIndex == -1) {
-                                    // No complete message found, break the loop
-                                    break;
+
+        if (willWork) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    byte[] buffer = new byte[1024]; // Buffer size as needed
+                    StringBuilder messageBuilder = new StringBuilder(); // To accumulate characters until a delimiter is encountered
+
+                    try {
+                        // Continuously read data
+                        while (true) {
+                            int len = port.read(buffer, 1000);
+                            if (len > 0) {
+                                String data = new String(buffer, 0, len);
+                                // Append the read data to the StringBuilder
+                                messageBuilder.append(data);
+                                // Process complete messages
+                                while (true) {
+                                    int delimiterIndex = messageBuilder.indexOf("\n");
+                                    if (delimiterIndex == -1) {
+                                        // No complete message found, break the loop
+                                        break;
+                                    }
+                                    // Extract the complete message
+                                    String completeMessage = messageBuilder.substring(0, delimiterIndex);
+                                    // Remove the processed part (including the delimiter) from the StringBuilder
+                                    messageBuilder.delete(0, delimiterIndex + 1);
+                                    // Process the complete message
+                                    processData(completeMessage);
                                 }
-                                // Extract the complete message
-                                String completeMessage = messageBuilder.substring(0, delimiterIndex);
-                                // Remove the processed part (including the delimiter) from the StringBuilder
-                                messageBuilder.delete(0, delimiterIndex + 1);
-                                // Process the complete message
-                                processData(completeMessage);
                             }
                         }
+                    } catch (IOException e) {
+                        Log.e(TAG, "run: " + e.toString());
                     }
-                } catch (IOException e) {
-                    Log.e(TAG, "run: " + e.toString());
                 }
-            }
 
-            // Method to process each complete message
-            private void processData(String message) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        int limit = 10;
-                        int size = collector.size();
-                        if (!message.isEmpty()) {
-                            String incomingMessage = message;
-                            if (incomingMessage.charAt(0) == 'S') {
-                                Log.d("Result", "handleMessage: stopped ");
-                                if (size > 0 && size < limit) {
-                                    Log.d("Result", "handleMessage: Collector Cleared ");
-                                    progressBar.setProgress(0, true);
-                                    collector.clear();
-                                } else if (size >= limit) {
-                                    Log.d("Result", "handleMessage: Collector Conversion ");
-                                    // Convert to float before limiting to ten
-                                    float[][] convertedToFloat = DataProcessor.listToFloat(collector);
-                                    float[][] limitedData = DataProcessor.limitTo(convertedToFloat, 10);
-                                    convertToWord(limitedData);
+                // Method to process each complete message
+                private void processData(String message) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            int limit = 10;
+                            int size = collector.size();
+                            if (!message.isEmpty()) {
+                                String incomingMessage = message;
+                                if (incomingMessage.charAt(0) == 'S') {
+                                    Log.d("Result", "handleMessage: stopped ");
+                                    if (size > 0 && size < limit) {
+                                        Log.d("Result", "handleMessage: Collector Cleared ");
+                                        progressBar.setProgress(0, true);
+                                        collector.clear();
+                                    } else if (size >= limit) {
+                                        Log.d("Result", "handleMessage: Collector Conversion ");
+                                        // Convert to float before limiting to ten
+                                        float[][] convertedToFloat = DataProcessor.listToFloat(collector);
+                                        float[][] limitedData = DataProcessor.limitTo(convertedToFloat, 10);
+                                        convertToWord(limitedData);
 
-                                    progressBar.setProgress(0, true);
-                                    collector.clear();
+                                        progressBar.setProgress(0, true);
+                                        collector.clear();
+                                    } else {
+                                        Log.d("Result", "handleMessage: System Encountered Unexpected Result ");
+                                    }
+
                                 } else {
-                                    Log.d("Result", "handleMessage: System Encountered Unexpected Result ");
-                                }
-
-                            } else {
-                                // Collect data
-                                try {
-                                    float[] result = DataProcessor.stringToFloatArray(incomingMessage);
-//                                                    Log.d("Model", "handleMessage: " + Arrays.toString(result));
-                                    progressBar.setProgress(size * 20);
-                                    collector.add(result);
-                                } catch (NumberFormatException e) {
-                                    Log.e("Model", "handleMessage: " + e.toString() + e.getMessage());
-                                    Log.e("Model", "handleMessage: " + incomingMessage);
-                                    Log.e("Model", "handleMessage: " + data);
-                                    Toast.makeText(getApplicationContext(), "S", Toast.LENGTH_LONG).show();
-                                    collector.clear();
+                                    // Collect data
+                                    try {
+                                        float[] result = DataProcessor.stringToFloatArray(incomingMessage);
+                                        progressBar.setProgress(size * 20);
+                                        collector.add(result);
+                                    } catch (NumberFormatException e) {
+                                        Log.e("Model", "handleMessage: " + e.toString() + e.getMessage());
+                                        Log.e("Model", "handleMessage: " + incomingMessage);
+                                        Log.e("Model", "handleMessage: " + data);
+                                        Toast.makeText(getApplicationContext(), "S", Toast.LENGTH_LONG).show();
+                                        collector.clear();
+                                    }
                                 }
                             }
                         }
-                    }
-                });
-            }
-        }).start();
+                    });
+                }
+            }).start();
+        } else {
+            dataInput.setText("No USB Connected");
+        }
 
-
-
-
-//        } else {
-//            Log.d(TAG, "onCreate: NO PORT");
-//        }
-
-
-
-
-        // Executes everytime the bluetooth device sends an output, it collect data until it encounter
-        // stop and then clear it
-//        Handler mHandler = new Handler(Looper.getMainLooper()) {
-//            int limit = 10;
-//            @Override
-//            public void handleMessage(Message msg) {
-//                String incomingMessage = (String) msg.obj;
-//                int size = collector.size();
-//                Log.d("Model", "handleMessage: " + incomingMessage);
-//                Log.d("Model", "size: " + size);
+//        debugButton.setOnClickListener(view -> {
+//            Log.d("Result", "onCreate: pressed debug");
+//            btHandler.switchDebugMode();
 //
-//                if (!incomingMessage.isEmpty()) {
-//                    if (incomingMessage.charAt(0) == 'S') {
-//                        Log.d("Result", "handleMessage: stopped ");
-//                        if (size > 0 && size < limit) {
-//                            Log.d("Result", "handleMessage: Collector Cleared ");
-//                            progressBar.setProgress(0, true);
-//                            collector.clear();
-//                        } else if (size >= limit) {
-//                            Log.d("Result", "handleMessage: Collector Conversion ");
-//                            // Convert to float before limiting to ten
-//                            float[][] convertedToFloat = DataProcessor.listToFloat(collector);
-//                            float[][] limitedData = DataProcessor.limitTo(convertedToFloat, 10);
-//                            convertToWord(limitedData);
-//
-//                            progressBar.setProgress(0, true);
-//                            collector.clear();
-//                        } else {
-//                            Log.d("Result", "handleMessage: System Encountered Unexpected Result ");
-//                        }
-//                    }
-//                    else {
-//                        // Collect data
-//                        try {
-//                            float[] result = DataProcessor.stringToFloatArray(incomingMessage);
-//                            Log.d("Result", "handleMessage: " + Arrays.toString(result));
-//                            progressBar.setProgress(size * 20);
-//                            collector.add(result);
-//                        } catch (NumberFormatException e) {
-//                            Log.e("Model", "handleMessage: " + e.toString() + e.getMessage());
-//                            Toast.makeText(getApplicationContext(), "S", Toast.LENGTH_LONG).show();
-//                            collector.clear();
-//                        }
-//                    }
-//                }
-//            }
-//        };
+//        });
 
-//        btHandler = BluetoothHandler.getInstance(this);
-//        btHandler.startConnection(mHandler);
-
-        debugButton.setOnClickListener(view -> {
-            Log.d("Result", "onCreate: pressed debug");
-            btHandler.switchDebugMode();
-        });
-
-        lights.setOnClickListener(view -> {
-            Log.d("Result", "onCreate: pressed off");
-            increaseBar();
-        });
-
-
+//        lights.setOnClickListener(view -> {
+//            Log.d("Result", "onCreate: pressed off");
+//            increaseBar();
+//        });
     }
 
     public void increaseBar() {
@@ -286,14 +263,12 @@ public class StartMode extends AppCompatActivity {
             Log.d("ExternalModel", "inference: " + Arrays.toString(result));
             int value = tensor.getFinalIndex(result);
             try {
-//                JSONObject words = wordProcessor.getCustomWords();
                 String word = words.getString(String.valueOf(value));
                 dataInput.setText(wordProcessor.speak(word));
             } catch (JSONException e) {
                 Log.e("Error", "convertToWord: " + e.toString());
             }
         }
-
     }
 
 
@@ -301,18 +276,13 @@ public class StartMode extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         // Shutdown TextToSpeech engine
-        if (textToSpeech != null) {
-            textToSpeech.stop();
-            textToSpeech.shutdown();
-        }
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        if (textToSpeech != null) {
-            textToSpeech.stop();
-            textToSpeech.shutdown();
+        wordProcessor.onDestroy();
+        try {
+            if (port != null) {
+                port.close();
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 }
